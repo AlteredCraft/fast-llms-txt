@@ -3,7 +3,7 @@ name = "fast-llms-txt"
 version = "0.1.0"
 description = "Generate llms.txt markdown from FastAPI OpenAPI schema for AI agents"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 license = "MIT"
 keywords = ["fastapi", "openapi", "llms", "ai", "documentation"]
 classifiers = [
