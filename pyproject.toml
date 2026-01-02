@@ -31,5 +31,20 @@ dev = [
     "build>=1.3.0",
     "httpx>=0.28.1",
     "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "pytest-randomly>=4.0.1",
     "twine>=6.2.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "--cov=fast_llms_txt --cov-report=term-missing -p randomly"
+
+[tool.coverage.run]
+source = ["fast_llms_txt"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
 ]

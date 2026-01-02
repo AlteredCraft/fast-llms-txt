@@ -1,5 +1,10 @@
 # fast-llms-txt
 
+[![PyPI version](https://img.shields.io/pypi/v/fast-llms-txt)](https://pypi.org/project/fast-llms-txt/)
+[![Python](https://img.shields.io/pypi/pyversions/fast-llms-txt)](https://pypi.org/project/fast-llms-txt/)
+[![License](https://img.shields.io/pypi/l/fast-llms-txt)](https://github.com/samaltman/fast-llms-txt/blob/main/LICENSE)
+[![Downloads](https://img.shields.io/pypi/dm/fast-llms-txt)](https://pypi.org/project/fast-llms-txt/)
+
 Generate an `llms.txt` markdown manifest from your FastAPI OpenAPI schema for AI agents.
 
 Inspired by the [llms.txt specification](https://llmstxt.org/) for LLM-friendly documentation.
@@ -27,6 +32,10 @@ def list_users(limit: int = 10):
 app.include_router(create_llms_txt_router(app), prefix="/docs")
 ```
 
+The `prefix` determines the final URL path. For example:
+- `prefix="/docs"` → `GET /docs/llms.txt`
+- `prefix="/api/v1/docs"` → `GET /api/v1/docs/llms.txt`
+
 Now `GET /docs/llms.txt` returns:
 
 ```markdown
@@ -37,7 +46,8 @@ Now `GET /docs/llms.txt` returns:
 ## Endpoints
 
 - **GET /users** - List all users.
-  - `limit` (integer, optional):
+  - **Parameters**:
+    - `limit` (integer, optional)
   - **Response** (200): Successful Response
 ```
 

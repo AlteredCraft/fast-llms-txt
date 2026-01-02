@@ -73,17 +73,22 @@ def _format_endpoint(lines: list[str], endpoint: dict[str, Any]) -> None:
 
     summary = operation.get("summary", "")
     description = operation.get("description", "")
-    desc = summary or description or ""
 
-    # Main endpoint line
-    if desc:
-        lines.append(f"- **{method} {path}** - {desc}")
+    # Main endpoint line with summary (or description as fallback)
+    title_desc = summary or description or ""
+    if title_desc:
+        lines.append(f"- **{method} {path}** - {title_desc}")
     else:
         lines.append(f"- **{method} {path}**")
+
+    # Show description separately if both summary and description exist
+    if summary and description and description != summary:
+        lines.append(f"  - {description}")
 
     # Parameters
     parameters = operation.get("parameters", [])
     if parameters:
+        lines.append("  - **Parameters**:")
         for param in parameters:
             _format_parameter(lines, param)
 
@@ -111,9 +116,9 @@ def _format_parameter(lines: list[str], param: dict[str, Any]) -> None:
     location = f" ({param_in})" if param_in != "query" else ""
 
     if description:
-        lines.append(f"  - `{name}` ({param_type}, {required_str}){location}: {description}")
+        lines.append(f"    - `{name}` ({param_type}, {required_str}){location}: {description}")
     else:
-        lines.append(f"  - `{name}` ({param_type}, {required_str}){location}")
+        lines.append(f"    - `{name}` ({param_type}, {required_str}){location}")
 
 
 def _format_request_body(
