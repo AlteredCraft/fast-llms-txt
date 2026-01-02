@@ -3,9 +3,8 @@
 [![PyPI version](https://img.shields.io/pypi/v/fast-llms-txt)](https://pypi.org/project/fast-llms-txt/)
 [![Python](https://img.shields.io/pypi/pyversions/fast-llms-txt)](https://pypi.org/project/fast-llms-txt/)
 [![License](https://img.shields.io/pypi/l/fast-llms-txt)](https://github.com/samaltman/fast-llms-txt/blob/main/LICENSE)
-[![Downloads](https://img.shields.io/pypi/dm/fast-llms-txt)](https://pypi.org/project/fast-llms-txt/)
 
-Generate an `llms.txt` markdown manifest from your FastAPI OpenAPI schema for AI agents.
+Generate an `llms.txt` markdown manifest from your FastAPI OpenAPI schema for AI agents. This results in a ~75% size reduction vs the output of a OpenAPI spec JSON.
 
 Inspired by the [llms.txt specification](https://llmstxt.org/) for LLM-friendly documentation.
 
