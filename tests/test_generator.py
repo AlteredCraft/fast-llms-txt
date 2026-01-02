@@ -64,10 +64,10 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "**GET /users** - List users" in result
+        assert "### `GET /users` - List users" in result
 
     def test_endpoint_with_description_fallback(self):
-        """Test that description is used when summary is missing."""
+        """Test that description is shown in blockquote when no summary."""
         schema = {
             "info": {"title": "API"},
             "paths": {
@@ -82,7 +82,8 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "**GET /users** - Retrieve all users" in result
+        assert "### `GET /users`" in result
+        assert "> Retrieve all users" in result
 
     def test_endpoint_grouped_by_tag(self):
         """Test that endpoints are grouped by tag."""
@@ -237,7 +238,7 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "**Response** (200): List of users" in result
+        assert "**Returns** (200): List of users" in result
 
     def test_201_response_priority(self):
         """Test that 201 response is used for POST endpoints."""
@@ -257,7 +258,7 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "**Response** (201): User created" in result
+        assert "**Returns** (201): User created" in result
 
     def test_array_type(self):
         """Test array type formatting."""
@@ -362,8 +363,8 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "**GET /users**" in result
-        assert "**POST /users**" in result
+        assert "`GET /users`" in result
+        assert "`POST /users`" in result
 
     def test_empty_paths(self):
         """Test handling of empty paths."""
@@ -432,4 +433,4 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "**Response** (200): User - Success" in result
+        assert "**Returns** (200): User - Success" in result

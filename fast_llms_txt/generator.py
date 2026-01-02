@@ -74,21 +74,24 @@ def _format_endpoint(lines: list[str], endpoint: dict[str, Any]) -> None:
     summary = operation.get("summary", "")
     description = operation.get("description", "")
 
-    # Main endpoint line with summary (or description as fallback)
-    title_desc = summary or description or ""
-    if title_desc:
-        lines.append(f"- **{method} {path}** - {title_desc}")
+    # H3 endpoint heading with summary
+    if summary:
+        lines.append(f"### `{method} {path}` - {summary}")
     else:
-        lines.append(f"- **{method} {path}**")
+        lines.append(f"### `{method} {path}`")
+    lines.append("")
 
-    # Show description separately if both summary and description exist
-    if summary and description and description != summary:
-        lines.append(f"  - {description}")
+    # Show description if present (and different from summary)
+    if description and description != summary:
+        # Indent each line of description
+        for desc_line in description.strip().split("\n"):
+            lines.append(f"> {desc_line}" if desc_line.strip() else ">")
+        lines.append("")
 
     # Parameters
     parameters = operation.get("parameters", [])
     if parameters:
-        lines.append("  - **Parameters**:")
+        lines.append("- **Request Parameters**:")
         for param in parameters:
             _format_parameter(lines, param)
 
@@ -100,6 +103,8 @@ def _format_endpoint(lines: list[str], endpoint: dict[str, Any]) -> None:
     # Response
     responses = operation.get("responses", {})
     _format_responses(lines, responses, schemas)
+
+    lines.append("")
 
 
 def _format_parameter(lines: list[str], param: dict[str, Any]) -> None:
@@ -116,9 +121,9 @@ def _format_parameter(lines: list[str], param: dict[str, Any]) -> None:
     location = f" ({param_in})" if param_in != "query" else ""
 
     if description:
-        lines.append(f"    - `{name}` ({param_type}, {required_str}){location}: {description}")
+        lines.append(f"  - `{name}` ({param_type}, {required_str}){location}: {description}")
     else:
-        lines.append(f"    - `{name}` ({param_type}, {required_str}){location}")
+        lines.append(f"  - `{name}` ({param_type}, {required_str}){location}")
 
 
 def _format_request_body(
@@ -139,7 +144,7 @@ def _format_request_body(
     properties = schema.get("properties", {})
 
     if properties:
-        lines.append("  - **Body**:")
+        lines.append("- **Body**:")
         for prop_name, prop_schema in properties.items():
             prop_schema = _resolve_ref(prop_schema, schemas)
             prop_type = _get_type_string(prop_schema)
@@ -147,9 +152,9 @@ def _format_request_body(
             required_str = "required" if prop_name in required_fields else "optional"
 
             if prop_desc:
-                lines.append(f"    - `{prop_name}` ({prop_type}, {required_str}): {prop_desc}")
+                lines.append(f"  - `{prop_name}` ({prop_type}, {required_str}): {prop_desc}")
             else:
-                lines.append(f"    - `{prop_name}` ({prop_type}, {required_str})")
+                lines.append(f"  - `{prop_name}` ({prop_type}, {required_str})")
 
 
 def _format_responses(
@@ -185,11 +190,11 @@ def _format_single_response(
     response_type = _get_response_type(response, schemas)
 
     if response_type and description:
-        lines.append(f"  - **Response** ({status_code}): {response_type} - {description}")
+        lines.append(f"- **Returns** ({status_code}): {response_type} - {description}")
     elif response_type:
-        lines.append(f"  - **Response** ({status_code}): {response_type}")
+        lines.append(f"- **Returns** ({status_code}): {response_type}")
     elif description:
-        lines.append(f"  - **Response** ({status_code}): {description}")
+        lines.append(f"- **Returns** ({status_code}): {description}")
 
 
 def _get_response_type(response: dict[str, Any], schemas: dict[str, Any]) -> str | None:

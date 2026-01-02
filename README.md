@@ -44,17 +44,11 @@ Now `GET /docs/llms.txt` returns:
 
 ## Endpoints
 
-## plans
+### `GET /users` - List all users.
 
-- **GET /api/v1/plans/** - List Plans
-  - List all plan documents.
-
-Returns filenames of all plan markdown files
-Plan names are auto-generated whimsical names (e.g., cosmic-plotting-bunny.md).
-
-Returns:
-    data: List of plan filenames
-  - **Response** (200): object - Successful Response
+- **Request Parameters**:
+  - `limit` (integer, optional)
+- **Returns** (200): Successful Response
 ```
 
 ## API
