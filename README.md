@@ -44,10 +44,17 @@ Now `GET /docs/llms.txt` returns:
 
 ## Endpoints
 
-- **GET /users** - List all users.
-  - **Parameters**:
-    - `limit` (integer, optional)
-  - **Response** (200): Successful Response
+## plans
+
+- **GET /api/v1/plans/** - List Plans
+  - List all plan documents.
+
+Returns filenames of all plan markdown files
+Plan names are auto-generated whimsical names (e.g., cosmic-plotting-bunny.md).
+
+Returns:
+    data: List of plan filenames
+  - **Response** (200): object - Successful Response
 ```
 
 ## API
@@ -74,6 +81,10 @@ This project uses [semantic versioning](https://semver.org/):
 - **MINOR** (0.x.0): New features, backward compatible
 - **MAJOR** (x.0.0): Breaking API changes
 
+### Prerequisites
+
+- [GitHub CLI](https://cli.github.com/) installed and authenticated (`gh auth login`)
+
 ### Release Steps
 
 Run the release script:
@@ -84,8 +95,9 @@ Run the release script:
 This will:
 1. Update version in `pyproject.toml` and `fast_llms_txt/__init__.py`
 2. Show diff and prompt for confirmation
-3. Commit and tag
-4. Optionally push (triggers PyPI publish via GitHub Actions)
+3. Commit the version bump
+4. Prompt for release notes (or auto-generate from commits)
+5. Push and create GitHub release (triggers PyPI publish via GitHub Actions)
 
 ### Infrastructure
 

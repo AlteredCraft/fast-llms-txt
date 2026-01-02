@@ -17,6 +17,22 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     exit 1
 fi
 
+# Check for gh CLI
+if ! command -v gh &> /dev/null; then
+    echo "Error: GitHub CLI (gh) is not installed."
+    echo "Install it from: https://cli.github.com/"
+    echo "  macOS: brew install gh"
+    echo "  Linux: https://github.com/cli/cli/blob/trunk/docs/install_linux.md"
+    exit 1
+fi
+
+# Check gh auth status
+if ! gh auth status &> /dev/null; then
+    echo "Error: GitHub CLI is not authenticated."
+    echo "Run: gh auth login"
+    exit 1
+fi
+
 echo "Releasing version $VERSION..."
 
 # Update pyproject.toml
@@ -39,19 +55,32 @@ echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     git add pyproject.toml fast_llms_txt/__init__.py
     git commit -m "Bump version to $VERSION"
-    git tag "v$VERSION"
 
     echo ""
-    echo "Created commit and tag v$VERSION"
+    echo "Created commit for v$VERSION"
     echo ""
-    read -p "Push to origin? (y/n) " -n 1 -r
+
+    # Get release notes
+    echo "Enter release notes (press Ctrl+D when done, or leave empty for auto-generated):"
+    NOTES=$(cat)
+
+    echo ""
+    read -p "Push and create GitHub release? (y/n) " -n 1 -r
     echo ""
 
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        git push && git push --tags
-        echo "Pushed! GitHub Actions will publish to PyPI."
+        git push
+
+        if [ -z "$NOTES" ]; then
+            gh release create "v$VERSION" --generate-notes
+        else
+            gh release create "v$VERSION" --notes "$NOTES"
+        fi
+
+        echo "Released! GitHub Actions will publish to PyPI."
     else
-        echo "Run 'git push && git push --tags' when ready."
+        echo "Commit pushed but no release created."
+        echo "Run 'gh release create v$VERSION' when ready."
     fi
 else
     echo "Aborted. Reverting changes..."
