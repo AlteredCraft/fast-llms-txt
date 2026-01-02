@@ -67,18 +67,16 @@ This project uses [semantic versioning](https://semver.org/):
 
 ### Release Steps
 
-1. **Update version** in both files:
-   - `pyproject.toml`: `version = "X.Y.Z"`
-   - `fast_llms_txt/__init__.py`: `__version__ = "X.Y.Z"`
+Run the release script:
+```bash
+./scripts/release.sh 0.2.0
+```
 
-2. **Commit and tag**:
-   ```bash
-   git add -A && git commit -m "Bump version to X.Y.Z"
-   git tag vX.Y.Z
-   git push && git push --tags
-   ```
-
-3. **Automated publish**: GitHub Actions triggers on `v*` tags and publishes to PyPI via trusted publishing (OIDC).
+This will:
+1. Update version in `pyproject.toml` and `fast_llms_txt/__init__.py`
+2. Show diff and prompt for confirmation
+3. Commit and tag
+4. Optionally push (triggers PyPI publish via GitHub Actions)
 
 ### Infrastructure
 
