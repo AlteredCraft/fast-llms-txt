@@ -53,3 +53,35 @@ Creates a FastAPI router that serves the llms.txt endpoint.
 ### `generate_llms_txt(openapi_schema)`
 
 Directly convert an OpenAPI schema dict to llms.txt markdown string.
+
+---
+
+## Appendix: Release Procedure
+
+### Versioning
+
+This project uses [semantic versioning](https://semver.org/):
+- **PATCH** (0.1.x): Bug fixes, no API changes
+- **MINOR** (0.x.0): New features, backward compatible
+- **MAJOR** (x.0.0): Breaking API changes
+
+### Release Steps
+
+1. **Update version** in both files:
+   - `pyproject.toml`: `version = "X.Y.Z"`
+   - `fast_llms_txt/__init__.py`: `__version__ = "X.Y.Z"`
+
+2. **Commit and tag**:
+   ```bash
+   git add -A && git commit -m "Bump version to X.Y.Z"
+   git tag vX.Y.Z
+   git push && git push --tags
+   ```
+
+3. **Automated publish**: GitHub Actions triggers on `v*` tags and publishes to PyPI via trusted publishing (OIDC).
+
+### Infrastructure
+
+- **PyPI**: [pypi.org/project/fast-llms-txt](https://pypi.org/project/fast-llms-txt/)
+- **Trusted Publishing**: No tokens required; GitHub Actions authenticates via OIDC
+- **Environment**: `release` environment in GitHub repo settings restricts publishing to `v*` tags
