@@ -61,8 +61,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo ""
 
     # Get release notes
-    echo "Enter release notes (press Ctrl+D when done, or leave empty for auto-generated):"
-    NOTES=$(cat)
+    echo "Enter release notes (single line, or leave empty for auto-generated):"
+    read -r NOTES
 
     echo ""
     read -p "Push and create GitHub release? (y/n) " -n 1 -r
