@@ -196,6 +196,43 @@ def _format_single_response(
     elif description:
         lines.append(f"- **Returns** ({status_code}): {description}")
 
+    # Format response properties
+    _format_response_properties(lines, response, schemas)
+
+
+def _format_response_properties(
+    lines: list[str], response: dict[str, Any], schemas: dict[str, Any]
+) -> None:
+    """Format response schema properties (one level deep)."""
+    content = response.get("content", {})
+    json_content = content.get("application/json", {})
+    schema = json_content.get("schema", {})
+
+    if not schema:
+        return
+
+    # Resolve $ref if present
+    schema = _resolve_ref(schema, schemas)
+
+    # Handle array types - show properties of the item type
+    if schema.get("type") == "array":
+        items = schema.get("items", {})
+        schema = _resolve_ref(items, schemas)
+
+    properties = schema.get("properties", {})
+    if not properties:
+        return
+
+    for prop_name, prop_schema in properties.items():
+        prop_schema = _resolve_ref(prop_schema, schemas)
+        prop_type = _get_type_string(prop_schema)
+        prop_desc = prop_schema.get("description", "")
+
+        if prop_desc:
+            lines.append(f"  - `{prop_name}` ({prop_type}): {prop_desc}")
+        else:
+            lines.append(f"  - `{prop_name}` ({prop_type})")
+
 
 def _get_response_type(response: dict[str, Any], schemas: dict[str, Any]) -> str | None:
     """Extract type string from response schema."""

@@ -434,3 +434,137 @@ class TestGenerateLlmsTxt:
         result = generate_llms_txt(schema)
 
         assert "**Returns** (200): User - Success" in result
+
+    def test_response_properties_with_ref(self):
+        """Test that response properties are expanded for $ref schemas."""
+        schema = {
+            "info": {"title": "API"},
+            "paths": {
+                "/users/{id}": {
+                    "get": {
+                        "responses": {
+                            "200": {
+                                "description": "Success",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": "#/components/schemas/User"}
+                                    }
+                                },
+                            }
+                        }
+                    }
+                }
+            },
+            "components": {
+                "schemas": {
+                    "User": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string", "description": "User ID"},
+                            "name": {"type": "string"},
+                            "email": {"type": "string", "description": "User email"},
+                        },
+                    }
+                }
+            },
+        }
+
+        result = generate_llms_txt(schema)
+
+        assert "`id` (string): User ID" in result
+        assert "`name` (string)" in result
+        assert "`email` (string): User email" in result
+
+    def test_response_properties_inline_schema(self):
+        """Test that response properties are expanded for inline schemas."""
+        schema = {
+            "info": {"title": "API"},
+            "paths": {
+                "/status": {
+                    "get": {
+                        "responses": {
+                            "200": {
+                                "description": "Success",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "status": {"type": "string"},
+                                                "uptime": {"type": "integer", "description": "Seconds running"},
+                                            },
+                                        }
+                                    }
+                                },
+                            }
+                        }
+                    }
+                }
+            },
+        }
+
+        result = generate_llms_txt(schema)
+
+        assert "`status` (string)" in result
+        assert "`uptime` (integer): Seconds running" in result
+
+    def test_response_properties_array_type(self):
+        """Test that array response types show item properties."""
+        schema = {
+            "info": {"title": "API"},
+            "paths": {
+                "/users": {
+                    "get": {
+                        "responses": {
+                            "200": {
+                                "description": "List of users",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "array",
+                                            "items": {"$ref": "#/components/schemas/User"},
+                                        }
+                                    }
+                                },
+                            }
+                        }
+                    }
+                }
+            },
+            "components": {
+                "schemas": {
+                    "User": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string"},
+                            "name": {"type": "string"},
+                        },
+                    }
+                }
+            },
+        }
+
+        result = generate_llms_txt(schema)
+
+        assert "array[User]" in result
+        assert "`id` (string)" in result
+        assert "`name` (string)" in result
+
+    def test_response_no_properties(self):
+        """Test graceful handling of responses without properties."""
+        schema = {
+            "info": {"title": "API"},
+            "paths": {
+                "/ping": {
+                    "get": {
+                        "responses": {
+                            "204": {"description": "No content"}
+                        }
+                    }
+                }
+            },
+        }
+
+        result = generate_llms_txt(schema)
+
+        assert "**Returns** (204): No content" in result
