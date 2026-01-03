@@ -9,6 +9,18 @@ Generate an `llms.txt` markdown manifest from your FastAPI OpenAPI schema for AI
 
 Inspired by the [llms.txt specification](https://llmstxt.org/) for LLM-friendly documentation.
 
+## Why?
+
+OpenAPI and FastAPI's support for it are excellent, but the specification is designed for deterministic machine interpretation. It must be complete and precise. Every schema, every `$ref`, every possible response. This results in a very large document.
+
+AI agents have different needs:
+
+- **Context windows are limited.** A 50KB OpenAPI spec consumes tokens that could be used for reasoning.
+- **Agents can infer.** A `Task` mentioned in one endpoint is probably the same `Task` concept elsewhere. They don't need every relationship spelled out.
+- **Agents recover from errors.** If an API responds that `foo` needs to be an integer, the agent adapts. It doesn't need perfect type information upfront.
+
+This project applies the [llms.txt](https://llmstxt.org/) philosophy, Concise, readable documentation for LLMs—to APIs.
+
 ## Installation
 
 ```bash

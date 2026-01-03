@@ -568,3 +568,108 @@ class TestGenerateLlmsTxt:
         result = generate_llms_txt(schema)
 
         assert "**Returns** (204): No content" in result
+
+    def test_nested_ref_property_expansion(self):
+        """Test that $ref properties show nested properties with type label."""
+        schema = {
+            "info": {"title": "API"},
+            "paths": {
+                "/response": {
+                    "get": {
+                        "responses": {
+                            "200": {
+                                "description": "Success",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": "#/components/schemas/Response"}
+                                    }
+                                },
+                            }
+                        }
+                    }
+                }
+            },
+            "components": {
+                "schemas": {
+                    "Response": {
+                        "type": "object",
+                        "properties": {
+                            "data": {"$ref": "#/components/schemas/DataItem"},
+                            "meta": {"$ref": "#/components/schemas/Meta"},
+                        },
+                    },
+                    "DataItem": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string"},
+                            "name": {"type": "string", "description": "Item name"},
+                        },
+                    },
+                    "Meta": {
+                        "type": "object",
+                        "properties": {
+                            "total": {"type": "integer"},
+                        },
+                    },
+                }
+            },
+        }
+
+        result = generate_llms_txt(schema)
+
+        assert "`data` (DataItem)" in result
+        assert "DataItem properties:" in result
+        assert "`id` (string)" in result
+        assert "`name` (string): Item name" in result
+        assert "`meta` (Meta)" in result
+        assert "Meta properties:" in result
+        assert "`total` (integer)" in result
+
+    def test_nested_array_ref_property_expansion(self):
+        """Test that array properties with $ref items show nested properties."""
+        schema = {
+            "info": {"title": "API"},
+            "paths": {
+                "/items": {
+                    "get": {
+                        "responses": {
+                            "200": {
+                                "description": "Success",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": "#/components/schemas/ListResponse"}
+                                    }
+                                },
+                            }
+                        }
+                    }
+                }
+            },
+            "components": {
+                "schemas": {
+                    "ListResponse": {
+                        "type": "object",
+                        "properties": {
+                            "items": {
+                                "type": "array",
+                                "items": {"$ref": "#/components/schemas/Item"},
+                            },
+                        },
+                    },
+                    "Item": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string"},
+                            "value": {"type": "number"},
+                        },
+                    },
+                }
+            },
+        }
+
+        result = generate_llms_txt(schema)
+
+        assert "`items` (array[Item])" in result
+        assert "Item properties:" in result
+        assert "`id` (string)" in result
+        assert "`value` (number)" in result
