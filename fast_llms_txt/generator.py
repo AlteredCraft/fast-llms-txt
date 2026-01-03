@@ -3,14 +3,11 @@
 from typing import Any
 
 
-def generate_llms_txt(
-    openapi_schema: dict[str, Any], llms_txt_path: str = "/llms.txt"
-) -> str:
+def generate_llms_txt(openapi_schema: dict[str, Any]) -> str:
     """Convert an OpenAPI schema to llms.txt markdown format.
 
     Args:
         openapi_schema: OpenAPI 3.x schema dictionary
-        llms_txt_path: The path where the llms.txt endpoint is mounted
 
     Returns:
         Markdown string in llms.txt format
@@ -60,16 +57,14 @@ def generate_llms_txt(
         lines.append("")
 
         for endpoint in endpoints:
-            _format_endpoint(lines, endpoint, llms_txt_path)
+            _format_endpoint(lines, endpoint)
 
         lines.append("")
 
     return "\n".join(lines).strip() + "\n"
 
 
-def _format_endpoint(
-    lines: list[str], endpoint: dict[str, Any], llms_txt_path: str = "/llms.txt"
-) -> None:
+def _format_endpoint(lines: list[str], endpoint: dict[str, Any]) -> None:
     """Format a single endpoint."""
     method = endpoint["method"]
     path = endpoint["path"]
@@ -84,12 +79,6 @@ def _format_endpoint(
         lines.append(f"### `{method} {path}` - {summary}")
     else:
         lines.append(f"### `{method} {path}`")
-    lines.append("")
-
-    # Detailed spec link
-    # Strip leading slash from path for the URL
-    path_for_url = path.lstrip("/")
-    lines.append(f"[Detailed spec]({llms_txt_path}/paths/{method}/{path_for_url})")
     lines.append("")
 
     # Show description if present (and different from summary)
@@ -232,79 +221,6 @@ def _resolve_ref(schema: dict[str, Any], schemas: dict[str, Any]) -> dict[str, A
         return schemas.get(schema_name, schema)
 
     return schema
-
-
-def _resolve_refs_deep(obj: Any, schemas: dict[str, Any], seen: set[str] | None = None) -> Any:
-    """Recursively resolve all $ref pointers in a schema.
-
-    Args:
-        obj: The object to resolve (dict, list, or primitive)
-        schemas: The components/schemas dict from the OpenAPI spec
-        seen: Set of already-resolved refs to prevent infinite recursion
-
-    Returns:
-        A copy of the object with all $refs replaced by their definitions
-    """
-    if seen is None:
-        seen = set()
-
-    if isinstance(obj, dict):
-        # Check for $ref
-        ref = obj.get("$ref")
-        if ref and isinstance(ref, str) and ref.startswith("#/components/schemas/"):
-            schema_name = ref.split("/")[-1]
-            if schema_name in seen:
-                # Circular reference - return a marker to prevent infinite recursion
-                return {"$circular_ref": schema_name}
-            if schema_name in schemas:
-                seen = seen | {schema_name}  # Create new set to avoid mutation
-                return _resolve_refs_deep(schemas[schema_name], schemas, seen)
-            return obj  # Ref not found, keep as-is
-
-        # Recursively process all dict values
-        return {k: _resolve_refs_deep(v, schemas, seen) for k, v in obj.items()}
-
-    if isinstance(obj, list):
-        return [_resolve_refs_deep(item, schemas, seen) for item in obj]
-
-    # Primitives (str, int, bool, None) - return as-is
-    return obj
-
-
-def get_operation_spec(
-    openapi_schema: dict[str, Any], method: str, path: str
-) -> dict[str, Any] | None:
-    """Get fully-resolved OpenAPI spec for a single method+path.
-
-    Args:
-        openapi_schema: The full OpenAPI schema dict
-        method: HTTP method (GET, POST, etc.)
-        path: API path (e.g., /users/{id})
-
-    Returns:
-        The operation spec with all $refs resolved, or None if not found
-    """
-    paths = openapi_schema.get("paths", {})
-    path_item = paths.get(path)
-    if not path_item:
-        return None
-
-    method_lower = method.lower()
-    operation = path_item.get(method_lower)
-    if not operation:
-        return None
-
-    schemas = openapi_schema.get("components", {}).get("schemas", {})
-
-    # Deep copy and resolve all refs
-    resolved_operation = _resolve_refs_deep(operation, schemas)
-
-    # Add method and path to the response
-    return {
-        "method": method.upper(),
-        "path": path,
-        **resolved_operation,
-    }
 
 
 def _get_type_string(schema: dict[str, Any]) -> str:
