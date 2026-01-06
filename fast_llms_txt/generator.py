@@ -28,6 +28,10 @@ def generate_llms_txt(openapi_schema: dict[str, Any]) -> str:
             lines.append(f"> {line}")
         lines.append("")
 
+    # Schema definitions section (at the top, before endpoints)
+    schemas = openapi_schema.get("components", {}).get("schemas", {})
+    _format_schema_definitions(lines, schemas)
+
     # Group endpoints by tag
     paths = openapi_schema.get("paths", {})
     endpoints_by_tag: dict[str, list[dict[str, Any]]] = {}
@@ -233,43 +237,6 @@ def _format_response_properties(
         else:
             lines.append(f"  - `{prop_name}` ({prop_type})")
 
-        # Expand nested $ref types (second level)
-        _format_nested_properties(lines, prop_schema_orig, schemas)
-
-
-def _format_nested_properties(
-    lines: list[str], prop_schema: dict[str, Any], schemas: dict[str, Any]
-) -> None:
-    """Format nested properties for $ref types (second level only)."""
-    # Check for direct $ref
-    ref = prop_schema.get("$ref")
-
-    # Check for array with $ref items
-    if not ref and prop_schema.get("type") == "array":
-        items = prop_schema.get("items", {})
-        ref = items.get("$ref")
-
-    if not ref or not ref.startswith("#/components/schemas/"):
-        return
-
-    type_name = ref.split("/")[-1]
-    resolved = schemas.get(type_name, {})
-    nested_props = resolved.get("properties", {})
-
-    if not nested_props:
-        return
-
-    lines.append(f"    {type_name} properties:")
-    for nested_name, nested_schema in nested_props.items():
-        nested_schema = _resolve_ref(nested_schema, schemas)
-        nested_type = _get_type_string(nested_schema)
-        nested_desc = nested_schema.get("description", "")
-
-        if nested_desc:
-            lines.append(f"    - `{nested_name}` ({nested_type}): {nested_desc}")
-        else:
-            lines.append(f"    - `{nested_name}` ({nested_type})")
-
 
 def _get_response_type(response: dict[str, Any], schemas: dict[str, Any]) -> str | None:
     """Extract type string from response schema."""
@@ -313,7 +280,54 @@ def _get_type_string(schema: dict[str, Any]) -> str:
     if "$ref" in schema:
         ref = schema["$ref"]
         if ref.startswith("#/components/schemas/"):
-            return ref.split("/")[-1]
+            return f"${ref.split('/')[-1]}"
         return "object"
 
     return schema_type
+
+
+def _format_schema_definitions(lines: list[str], schemas: dict[str, Any]) -> None:
+    """Format schema definitions section at the top of the document."""
+    if not schemas:
+        return
+
+    lines.append("## Schema Definitions")
+    lines.append("")
+    lines.append("> Reusable schema types referenced throughout the API.")
+    lines.append("")
+
+    for schema_name, schema in schemas.items():
+        lines.append(f"### ${schema_name}")
+        lines.append("")
+
+        description = schema.get("description")
+        if description:
+            for line in description.strip().split("\n"):
+                lines.append(f"> {line}" if line.strip() else ">")
+            lines.append("")
+
+        properties = schema.get("properties", {})
+        required_fields = set(schema.get("required", []))
+
+        if properties:
+            lines.append("Properties:")
+            for prop_name, prop_schema in properties.items():
+                prop_type = _get_type_string(prop_schema)
+                prop_desc = prop_schema.get("description", "")
+                required_str = " (required)" if prop_name in required_fields else ""
+
+                if prop_desc:
+                    lines.append(f"- `{prop_name}` ({prop_type}{required_str}): {prop_desc}")
+                else:
+                    lines.append(f"- `{prop_name}` ({prop_type}{required_str})")
+            lines.append("")
+        else:
+            # Handle schemas without properties (e.g., enums, primitives)
+            schema_type = schema.get("type")
+            if "enum" in schema:
+                enum_values = schema["enum"]
+                lines.append(f"Type: enum[{', '.join(str(v) for v in enum_values)}]")
+                lines.append("")
+            elif schema_type:
+                lines.append(f"Type: {schema_type}")
+                lines.append("")

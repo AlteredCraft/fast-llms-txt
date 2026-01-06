@@ -379,7 +379,7 @@ class TestGenerateLlmsTxt:
         assert "##" not in result
 
     def test_response_type_from_schema(self):
-        """Test that response type is extracted from schema."""
+        """Test that response type is extracted from schema with $ prefix."""
         schema = {
             "info": {"title": "API"},
             "paths": {
@@ -406,10 +406,10 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "array[User]" in result
+        assert "array[$User]" in result
 
     def test_response_type_with_ref(self):
-        """Test response type with $ref."""
+        """Test response type with $ref uses $ prefix."""
         schema = {
             "info": {"title": "API"},
             "paths": {
@@ -433,7 +433,7 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "**Returns** (200): User - Success" in result
+        assert "**Returns** (200): $User - Success" in result
 
     def test_response_properties_with_ref(self):
         """Test that response properties are expanded for $ref schemas."""
@@ -509,7 +509,7 @@ class TestGenerateLlmsTxt:
         assert "`uptime` (integer): Seconds running" in result
 
     def test_response_properties_array_type(self):
-        """Test that array response types show item properties."""
+        """Test that array response types use $ prefix for refs."""
         schema = {
             "info": {"title": "API"},
             "paths": {
@@ -546,7 +546,10 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "array[User]" in result
+        # Response type uses $ prefix
+        assert "array[$User]" in result
+        # Schema definitions section shows properties
+        assert "### $User" in result
         assert "`id` (string)" in result
         assert "`name` (string)" in result
 
@@ -570,7 +573,7 @@ class TestGenerateLlmsTxt:
         assert "**Returns** (204): No content" in result
 
     def test_nested_ref_property_expansion(self):
-        """Test that $ref properties show nested properties with type label."""
+        """Test that $ref properties use $ prefix and schemas are in definitions."""
         schema = {
             "info": {"title": "API"},
             "paths": {
@@ -617,16 +620,22 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "`data` (DataItem)" in result
-        assert "DataItem properties:" in result
-        assert "`id` (string)" in result
+        # Response properties reference other schemas with $ prefix
+        assert "`data` ($DataItem)" in result
+        assert "`meta` ($Meta)" in result
+
+        # Schema definitions section contains all schemas
+        assert "## Schema Definitions" in result
+        assert "### $Response" in result
+        assert "### $DataItem" in result
+        assert "### $Meta" in result
+
+        # DataItem properties are in the schema definitions
         assert "`name` (string): Item name" in result
-        assert "`meta` (Meta)" in result
-        assert "Meta properties:" in result
         assert "`total` (integer)" in result
 
     def test_nested_array_ref_property_expansion(self):
-        """Test that array properties with $ref items show nested properties."""
+        """Test that array properties with $ref items use $ prefix."""
         schema = {
             "info": {"title": "API"},
             "paths": {
@@ -669,7 +678,13 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "`items` (array[Item])" in result
-        assert "Item properties:" in result
+        # Array type uses $ prefix for items
+        assert "`items` (array[$Item])" in result
+
+        # Schema definitions section has both schemas
+        assert "### $ListResponse" in result
+        assert "### $Item" in result
+
+        # Item properties are in schema definitions
         assert "`id` (string)" in result
         assert "`value` (number)" in result
