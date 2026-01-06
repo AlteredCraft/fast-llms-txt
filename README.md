@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/pypi/l/fast-llms-txt)](https://github.com/AlteredCraft/fast-llms-txt/blob/main/LICENSE)
 [![codecov](https://codecov.io/github/AlteredCraft/fast-llms-txt/graph/badge.svg?token=PD0EADRRJP)](https://codecov.io/github/AlteredCraft/fast-llms-txt)
 
-Generate an `llms.txt` markdown manifest from your FastAPI OpenAPI schema for AI agents. This results in a ~75% size reduction vs the output of a OpenAPI spec JSON.
+Generate an `llms.txt` markdown manifest from your FastAPI OpenAPI schema for AI agents. This results in a ~40-50% size reduction vs the output of a OpenAPI spec JSON.
 
 Inspired by the [llms.txt specification](https://llmstxt.org/) for LLM-friendly documentation.
 
