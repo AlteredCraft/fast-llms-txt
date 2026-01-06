@@ -315,7 +315,7 @@ class TestGenerateLlmsTxt:
         assert "enum[active, inactive]" in result
 
     def test_schema_ref(self):
-        """Test $ref resolution in request body."""
+        """Test $ref in request body shows type reference, not expanded properties."""
         schema = {
             "info": {"title": "API"},
             "paths": {
@@ -347,7 +347,11 @@ class TestGenerateLlmsTxt:
 
         result = generate_llms_txt(schema)
 
-        assert "`name` (string, required): User name" in result
+        # Request body shows type reference, not expanded properties
+        assert "**Body**: $User" in result
+        # Properties are in Schema Definitions section
+        assert "### $User" in result
+        assert "`name` (string (required)): User name" in result
 
     def test_multiple_http_methods(self):
         """Test that multiple HTTP methods on same path are handled."""

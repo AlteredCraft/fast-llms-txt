@@ -133,7 +133,11 @@ def _format_parameter(lines: list[str], param: dict[str, Any]) -> None:
 def _format_request_body(
     lines: list[str], request_body: dict[str, Any], schemas: dict[str, Any]
 ) -> None:
-    """Format request body."""
+    """Format request body for inline schemas only.
+
+    Named schemas ($ref) show just the type reference - properties
+    are defined in Schema Definitions section.
+    """
     content = request_body.get("content", {})
     json_content = content.get("application/json", {})
     schema = json_content.get("schema", {})
@@ -141,18 +145,22 @@ def _format_request_body(
     if not schema:
         return
 
-    # Resolve $ref if present
-    schema = _resolve_ref(schema, schemas)
+    # For named schemas, just show the type reference
+    if "$ref" in schema:
+        body_type = _get_type_string(schema)
+        lines.append(f"- **Body**: {body_type}")
+        return
 
+    # For inline schemas, expand properties
     required_fields = set(schema.get("required", []))
     properties = schema.get("properties", {})
 
     if properties:
         lines.append("- **Body**:")
         for prop_name, prop_schema in properties.items():
-            prop_schema = _resolve_ref(prop_schema, schemas)
+            resolved = _resolve_ref(prop_schema, schemas)
             prop_type = _get_type_string(prop_schema)
-            prop_desc = prop_schema.get("description", "")
+            prop_desc = resolved.get("description", "")
             required_str = "required" if prop_name in required_fields else "optional"
 
             if prop_desc:
@@ -207,7 +215,11 @@ def _format_single_response(
 def _format_response_properties(
     lines: list[str], response: dict[str, Any], schemas: dict[str, Any]
 ) -> None:
-    """Format response schema properties (two levels deep)."""
+    """Format response schema properties for inline schemas only.
+
+    Named schemas ($ref) are not expanded here - they're defined in
+    Schema Definitions section. Only inline schemas get properties shown.
+    """
     content = response.get("content", {})
     json_content = content.get("application/json", {})
     schema = json_content.get("schema", {})
@@ -215,13 +227,16 @@ def _format_response_properties(
     if not schema:
         return
 
-    # Resolve $ref if present
-    schema = _resolve_ref(schema, schemas)
+    # Skip expansion for named schemas - they're in Schema Definitions
+    if "$ref" in schema:
+        return
 
-    # Handle array types - show properties of the item type
+    # Handle array types - check if items is a $ref
     if schema.get("type") == "array":
         items = schema.get("items", {})
-        schema = _resolve_ref(items, schemas)
+        if "$ref" in items:
+            return
+        schema = items
 
     properties = schema.get("properties", {})
     if not properties:
